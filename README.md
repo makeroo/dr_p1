@@ -104,18 +104,23 @@ There are many kind of inconsistencies:
 
 Two thesis contradict each other if there is a contradiction relation that holds.
   
-A contradiction holds between T1 and T2 when:
- * there is a contradiction relation between T1 and Ta that holds, that is f(S) > 0
- * there is a path: Ta <- Tb <- .. T1
-  with supporting relation that holds (ei. f(S) > 0) going from T1 to Ta
+A contradiction holds between Ta and Tb if:
+ * there is a contradiction relation between Ta and Tb OR
+ * there is a path [Ta, T1, ... Tn, Tn+1 ... Tm, Tb] such that:
+   * Ta -> T1 -> ... -> Tn -x- Tn+1 <- Tn+2 <- ... <- Tm <- Tb
+     where -x- denotes a contradiction and <- denotes support
+     and those relations holds, ie. have a strength greater than zero
 
 *Note*: it is an inconcistency *even if* the user downvotes any of the involved relations, that is if she/he does not agree with the majority of the users.
 
-f(I_type_1) = 1 - |f(T1)| * |f(Ta)| * f(Sab) * |f(Tb)| * f(Sbc) * ... * |f(T2)|
+f(I_type_1) = 1 - |f(Ta)| * f(Sa1) * |f(T1)| * f(S12) * ... f(Snn+1) * |f(Tn+1)| * ... * f(Smb) * |f(Tb)|
 
 where:
 * |f(T)| is f(T) / max f(T)
 * T1, T2 are the upvoted thesis that contradict each other.
+
+Note: for each contradiction relation consider only one contradiction,
+the one with higher strength.
 
 ## Calculating strengths
 
