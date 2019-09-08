@@ -1,1 +1,6 @@
 /.venv
+/.eggs
+/dr_p1.egg-info
+__pycache__
+/dist
+/build

@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+import sys
+import os
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+from distutils.core import Command
+
+
 PACKAGE_NAME = "dr_p1"
 PACKAGE_ROOT = "dr"
 PACKAGE_URL = "https://github.com/makeroo/dr_p1"
@@ -22,16 +29,11 @@ CLASSIFIERS = [
     # "Programming Language :: Python :: Implementation :: Jython",
 ]
 
-try:
-    from ez_setup import use_setuptools
-    use_setuptools()
-except ImportError:
-    pass
-
-import sys, os
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
-from distutils.core import Command
+# try:
+#    from ez_setup import use_setuptools
+#    use_setuptools()
+# except ImportError:
+#    pass
 
 
 class CleanCommand(Command):
