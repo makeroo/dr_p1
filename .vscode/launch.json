@@ -1,0 +1,28 @@
+{
+    // Usare IntelliSense per informazioni sui possibili attributi.
+    // Al passaggio del mouse vengono visualizzate le descrizioni degli attributi esistenti.
+    // Per ulteriori informazioni, visitare: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: run project tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/setup.py",
+            "console": "integratedTerminal",
+//            "pythonPath": "${project}" //"${config:python.pythonPath}"
+            "args": ["test"],
+//            "stopOnEntry": true
+        },
+        {
+            "name": "Python: File corrente",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+//            "pythonPath": "${project}" //"${config:python.pythonPath}"
+            "args": ["test"],
+            "stopOnEntry": true
+        }
+    ]
+}

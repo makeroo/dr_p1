@@ -1,11 +1,12 @@
 class User:
-    def __init__(name):
+    def __init__(self, name):
         assert type(name) is str and len(name) > 0, 'illegal name'
 
         self.name = name
 
     def __eq__(self, other):
-        return self is other or isinstance(other, User) and self.name == other.name
+        return self is other or \
+            isinstance(other, User) and self.name == other.name
 
     def __hash__(self):
         return hash(self.name)
@@ -34,7 +35,7 @@ class Problem:
 
 
 class Thesis:
-    def __init__(content, is_solution):
+    def __init__(self, content, is_solution):
         assert type(content) is str and len(content) > 0, 'illegal content'
         assert type(is_solution) is bool, 'illegal is_solution'
 
@@ -44,7 +45,8 @@ class Thesis:
         self.votes = dict()  # from users to -1/+1
 
     def __eq__(self, other):
-        return self is other or isinstance(other, Thesis) and self.content == other.content
+        return self is other or \
+            isinstance(other, Thesis) and self.content == other.content
 
     def __hash__(self):
         return hash(self.content)
@@ -65,7 +67,8 @@ class Relation:
     CONTRADICTION = object()
 
     def __init__(self, relation_type, thesis1, thesis2):
-        assert relation_type in (Relation.CONTRADICTION, Relation.SUPPORT), 'illegal relation_type'
+        assert relation_type in (Relation.CONTRADICTION, Relation.SUPPORT), \
+            'illegal relation_type'
         assert isinstance(thesis1, Thesis), 'illegal thesis1'
         assert isinstance(thesis2, Thesis), 'illegal thesis2'
 
