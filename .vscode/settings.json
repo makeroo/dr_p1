@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": ".venv/bin/python3"
+    "python.pythonPath": ".venv/bin/python3",
+    "python.linting.enabled": true,
+    "python.linting.pep8Enabled": true
 }

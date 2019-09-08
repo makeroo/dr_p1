@@ -62,7 +62,8 @@ class Solver:
 
         # collect all users and set their strength to default 1
 
-        self.users = {u: UserData()
+        self.users = {
+            u: UserData()
             for u in [
                 u
                 for thesis in problem.theses
@@ -93,9 +94,20 @@ class Solver:
 
         self.contradictions = []
 
+        logger.info(
+            'problem to solve: question=%s, theses=%s, '
+            'relations=%s, voters=%s',
+            problem.question,
+            len(self.theses_data),
+            len(self.relations),
+            len(self.users)
+        )
+
         self._analyze_theses_graph()
 
         self._find_users_contradictions()
+
+        logger.debug('contradictions: found=%s', len(self.contradictions))
 
         # stats
 
@@ -103,16 +115,19 @@ class Solver:
 
     def solve(self):
         """
-        Calculate theses strengths and return the one with greater strength that is also a solution.
+        Calculate theses strengths and return the one with greater strength
+        that is also a solution.
         """
 
         while True:
+            self.iteration += 1
+
+            logger.debug('iteration: n=%s', self.iteration)
+
             self._iterate()
 
             if self._converged():
                 break
-
-            self.iteration += 1
 
         return self._find_stronger_solution()
 
@@ -123,7 +138,8 @@ class Solver:
 
         for relation in self.relations:
             if relation.type is Relation.SUPPORT:
-                self.theses_data[relation.thesis2].supporting_relations.add(relation)
+                self.theses_data[relation.thesis2].supporting_relations.add(
+                    relation)
 
                 paths.add([relation.thesis2, relation.thesis1])
 
@@ -187,7 +203,7 @@ class Solver:
                     self.inverse_theses_order.append(thesis)
 
     def _iterate(self):
-        self._calc_all_users_strength();
+        self._calc_all_users_strength()
         self._calc_relations_strength()
         self._calc_theses_strength()
         self._calc_contradictions_strength()
@@ -231,9 +247,12 @@ class Solver:
                     relation_data = self.relations[relation]
                     supporting_thesis_data = self.theses_data[relation.thesis1]
 
-                    thesis_data.strength += relation_data.strength * supporting_thesis_data.strength
+                    thesis_data.strength += relation_data.strength * \
+                        supporting_thesis_data.strength
 
-        self.max_theses_strength = max([thesis.strength for thesis in self.theses])
+        self.max_theses_strength = max(
+            [thesis.strength for thesis in self.theses]
+        )
 
     def _new_contradiction(self, contradiction_relation, path1, path2):
         r = Contradiction(contradiction_relation, path1, path2)
@@ -242,7 +261,9 @@ class Solver:
 
         return r
 
-    def _build_and_assign_contradiction(self, users, relation, path1=None, path2=None):
+    def _build_and_assign_contradiction(
+        self, users, relation, path1=None, path2=None
+    ):
         if not users:
             return
 
@@ -251,17 +272,20 @@ class Solver:
         for user in users:
             user_data = self.users[user]
 
-            user_data.contradictions.setdefault(relation, []).append(contradiction)
+            user_data.contradictions.setdefault(relation, []).append(
+                contradiction
+            )
 
     def _find_users_contradictions(self):
-        # method 3: collect all inconsistencies, starting from contradiciton relation
-        # and following support path, then assign them to voting users
+        # method 3: collect all inconsistencies, starting from contradiciton
+        # relation and following support path, then assign them to voting users
         self.contradictions = []
 
         for user_data in self.users.values():
             user_data.contradictions = {}
 
-        for relation in filter(lambda r: r.type is self.CONTRADICTION, self.relations):
+        for relation in filter(lambda r: r.type is self.CONTRADICTION,
+                               self.relations):
             self._build_and_assign_contradiction(
                 relation.thesis1.votes.keys() & relation.thesis2.votes.keys(),
                 relation
@@ -322,10 +346,15 @@ class Solver:
     def _calc_contradictions_strength(self):
         for contradiction in self.contradictions:
             contradiction_relation = contradiction.relation
-            thesis1_strength = self._normalized_thesis_strength(contradiction_relation.thesis1)
-            thesis2_strength = self._normalized_thesis_strength(contradiction_relation.thesis2)
+            thesis1_strength = self._normalized_thesis_strength(
+                contradiction_relation.thesis1
+            )
+            thesis2_strength = self._normalized_thesis_strength(
+                contradiction_relation.thesis2
+            )
 
-            strength = self.relation[contradiction_relation].strength * thesis1_strength * thesis2_strength
+            strength = self.relation[contradiction_relation].strength * \
+                thesis1_strength * thesis2_strength
 
             for path in [contradiction.path1, contradiction.path2]:
                 if path is None:
@@ -333,7 +362,9 @@ class Solver:
 
                 for relation in path.path:
                     relation_strength = self.relations[relation].strength
-                    thesis1_strength = self._normalized_thesis_strength(relation.thesis1)
+                    thesis1_strength = self._normalized_thesis_strength(
+                        relation.thesis1
+                    )
 
                     strength *= relation_strength * thesis1_strength
 
@@ -354,29 +385,3 @@ class Solver:
 
             if error > self.error_threshold:
                 return False
-
-
-'''
-        # method 2: for each thesis couple, find if they contradict each other
-        # then consider these theses votes
-
-        # find inconsistencies
-        # ie. user vote Ta and Tb and there is a path [T1, ... Tn] where
-        # Ta -x- T1 <- T2 ... <- Tn <- Tb
-        # or Ta -x- Tb if such path does not exist
-        # f(I) = 1 - |f(Ta)| * |f(T1)| * f(S12) * ... * f(n-1n) * |f(Tn)| * f(Snb) * |f(Tb)|
-        for thesis_a in self.theses:
-            for thesis_b in self.theses:
-                if thesis_a is thesis_b:
-                    continue
-
-            contradiction = self._contradiction_between(thesis_a, thesis_b)
-
-            if contradiction is None:
-                continue
-
-            for user in thesis_a.votes:
-                if user in thesis_b.votes:
-                    user.contradictions.append(contradiction)
-
-'''
