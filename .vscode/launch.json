@@ -15,14 +15,25 @@
 //            "stopOnEntry": true
         },
         {
+            "name": "Python: run test test_graph_analysis_4s0c1cy",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "console": "integratedTerminal",
+//            "pythonPath": "${project}" //"${config:python.pythonPath}"
+            "args": ["-vvv", "tests.test_simple_solver.TestSimpleSolver.test_graph_analysis_4s0c1cy"],
+//            "stopOnEntry": true
+            "justMyCode": false
+        },
+        {
             "name": "Python: File corrente",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
 //            "pythonPath": "${project}" //"${config:python.pythonPath}"
-            "args": ["test"],
-            "stopOnEntry": true
+            "args": [],
+            "stopOnEntry": false
         }
     ]
 }

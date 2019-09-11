@@ -1,6 +1,7 @@
 import logging
 
 from .model import Relation
+from .utils import dump_path
 
 
 logger = logging.getLogger(__name__)
@@ -84,7 +85,7 @@ class Solver:
             for thesis in problem.theses
         }
 
-        self.inverse_theses_order = None
+        self.theses_order = None
         self.max_theses_strength = 0
 
         self.relations = {
@@ -138,10 +139,12 @@ class Solver:
 
         for relation in self.relations:
             if relation.type is Relation.SUPPORT:
-                self.theses_data[relation.thesis2].supporting_relations.add(
+                self.theses_data[relation.thesis2].supporting_relations.append(
                     relation)
 
-                paths.add([relation.thesis2, relation.thesis1])
+                paths.append([relation.thesis2, relation.thesis1])
+
+                logger.debug('path found: path=%s', dump_path(paths[-1]))
 
         # find cycles
 
@@ -157,36 +160,45 @@ class Solver:
                 for relation in thesis_data.supporting_relations:
                     new_path = path + [relation.thesis1]
 
-                    if thesis in path:
+                    if relation.thesis1 in path:
                         cycles.append(new_path)
+                        logger.debug('cycle found: path=%s', dump_path(new_path))
                     else:
                         new_paths.append(new_path)
+                        logger.debug('path found: path=%s', dump_path(new_path))
 
             paths = new_paths
 
         # remove supporting_relations that form cycles
 
         for cycle in cycles:
-            for relation in cycle:
-                thesis = relation.thesis2
-                thesis_data = self.thesis_data[thesis]
+            thesis2 = cycle[0]
+            for thesis1 in cycle[1:]:
+                thesis2_data = self.theses_data[thesis2]
 
-                thesis_data.supporting_relations.remove(relation)
+                thesis2_data.supporting_relations = list(
+                    filter(
+                        lambda x: x.thesis1 != thesis1,
+                        thesis2_data.supporting_relations
+                    )
+                )
+
+                thesis2 = thesis1
 
         # calc theses order
 
-        self.inverse_theses_order = []
+        self.theses_order = []
 
         theses_count = len(self.theses_data)
 
-        while theses_count > len(self.inverse_theses_order):
+        while theses_count > len(self.theses_order):
             for thesis, thesis_data in self.theses_data.items():
                 if thesis_data.taken:
                     continue
 
                 if not thesis_data.supporting_relations:
                     thesis_data.taken = True
-                    self.inverse_theses_order.append(thesis)
+                    self.theses_order.append(thesis)
                     continue
 
                 collectable = True
@@ -200,7 +212,7 @@ class Solver:
 
                 if collectable:
                     thesis_data.taken = True
-                    self.inverse_theses_order.append(thesis)
+                    self.theses_order.append(thesis)
 
     def _iterate(self):
         self._calc_all_users_strength()
@@ -237,7 +249,7 @@ class Solver:
             return 0
 
     def _calc_theses_strength(self):
-        for thesis in reversed(self.inverse_theses_order):
+        for thesis in self.theses_order:
             thesis_data = self.theses_data[thesis]
 
             thesis_data.strength = self._direct_votes_strength(thesis)
@@ -284,7 +296,7 @@ class Solver:
         for user_data in self.users.values():
             user_data.contradictions = {}
 
-        for relation in filter(lambda r: r.type is self.CONTRADICTION,
+        for relation in filter(lambda r: r.type is Relation.CONTRADICTION,
                                self.relations):
             self._build_and_assign_contradiction(
                 relation.thesis1.votes.keys() & relation.thesis2.votes.keys(),
