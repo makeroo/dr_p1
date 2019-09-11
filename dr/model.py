@@ -11,6 +11,9 @@ class User:
     def __hash__(self):
         return hash(self.name)
 
+    def __str__(self):
+        return self.name
+
 
 class Problem:
     def __init__(self, question):
@@ -20,6 +23,9 @@ class Problem:
 
         self.theses = set()
         self.relations = set()
+
+    def __str__(self):
+        return 'P:"%s"' % self.question
 
     def add_thesis(self, thesis):
         assert isinstance(thesis, Thesis), 'illegal thesis'
@@ -50,6 +56,12 @@ class Thesis:
 
     def __hash__(self):
         return hash(self.content)
+
+    def __str__(self):
+        return '%s:"%s"' % (
+            'S' if self.is_solution else 'T',
+            self.content,
+        )
 
     def upvote(self, user):
         assert isinstance(user, User), 'illegal user'
@@ -88,6 +100,13 @@ class Relation:
 
     def __hash__(self):
         return hash(self.type) + hash(self.thesis1) + hash(self.thesis2)
+
+    def __str__(self):
+        return '%s%s%s' % (
+            self.thesis1,
+            '->' if self.type is Relation.SUPPORT else '-x-',
+            self.thesis2,
+        )
 
     def upvote(self, user):
         assert isinstance(user, User), 'illegal user'
