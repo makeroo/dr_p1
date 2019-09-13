@@ -39,21 +39,25 @@ class Path:
 
     @property
     def first_thesis(self):
-        self.path[0].thesis1
+        return self.path[-1].thesis1
 
     @property
     def last_thesis(self):
-        self.path[-1].thesis1
+        return self.path[0].thesis2
 
     def __contains__(self, thesis):
         for rel in self.path:
-            if rel.thesis1 == thesis:
+            if rel.thesis2 == thesis:
                 return True
 
-        return rel.thesis2 == thesis
+        return rel.thesis1 == thesis
 
     def grow(self, relation):
         return Path(*self.path, relation)
+
+    def __str__(self):
+        return self.path[-1].thesis1.content + '->' + '->'.join(
+            [p.thesis2.content for p in reversed(self.path)])
 
 
 class Solver:
@@ -142,9 +146,9 @@ class Solver:
                 self.theses_data[relation.thesis2].supporting_relations.append(
                     relation)
 
-                paths.append([relation.thesis2, relation.thesis1])
+                paths.append(Path(relation))
 
-                logger.debug('path found: path=%s', dump_path(paths[-1]))
+                logger.debug('path found: path=%s', paths[-1])
 
         # find cycles
 
@@ -154,36 +158,38 @@ class Solver:
             new_paths = []
 
             for path in paths:
-                thesis = path[-1]
+                thesis = path.first_thesis
                 thesis_data = self.theses_data[thesis]
 
                 for relation in thesis_data.supporting_relations:
-                    new_path = path + [relation.thesis1]
+                    new_path = path.grow(relation)
 
                     if relation.thesis1 in path:
                         cycles.append(new_path)
-                        logger.debug('cycle found: path=%s', dump_path(new_path))
+                        logger.debug('cycle found: path=%s', new_path)
                     else:
                         new_paths.append(new_path)
-                        logger.debug('path found: path=%s', dump_path(new_path))
+                        logger.debug('path found: path=%s', new_path)
 
             paths = new_paths
 
         # remove supporting_relations that form cycles
 
-        for cycle in cycles:
-            thesis2 = cycle[0]
-            for thesis1 in cycle[1:]:
-                thesis2_data = self.theses_data[thesis2]
+        relations_to_remove = {
+            r
+            for path in cycles
+            for r in path.path
+        }
 
-                thesis2_data.supporting_relations = list(
-                    filter(
-                        lambda x: x.thesis1 != thesis1,
-                        thesis2_data.supporting_relations
-                    )
+        for relation in relations_to_remove:
+            thesis2_data = self.theses_data[relation.thesis2]
+
+            thesis2_data.supporting_relations = list(
+                filter(
+                    lambda x: x != relation,
+                    thesis2_data.supporting_relations
                 )
-
-                thesis2 = thesis1
+            )
 
         # calc theses order
 

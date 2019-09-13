@@ -106,4 +106,4 @@ class TestSimpleSolver (TestCase):
 
         self.assertEqual(solver.contradictions, [])
 
-        self.assertEqual(solver.theses_order[-1], t1)
+        self.assertTrue(solver.theses_order.index(t1) > solver.theses_order.index(t4))
