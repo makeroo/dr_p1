@@ -15,13 +15,13 @@
 //            "stopOnEntry": true
         },
         {
-            "name": "Python: run test test_graph_analysis_4s0c1cy",
+            "name": "Python: run test test_iteration_0s1c0cy",
             "type": "python",
             "request": "launch",
             "module": "unittest",
             "console": "integratedTerminal",
 //            "pythonPath": "${project}" //"${config:python.pythonPath}"
-            "args": ["-vvv", "tests.test_simple_solver.TestSimpleSolver.test_graph_analysis_4s0c1cy"],
+            "args": ["-vvv", "tests.test_simple_solver.TestSimpleSolver.test_iteration_0s1c0cy"],
 //            "stopOnEntry": true
             "justMyCode": false
         },

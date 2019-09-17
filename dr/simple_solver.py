@@ -61,7 +61,7 @@ class Path:
 
 
 class Solver:
-    def __init__(self, problem, error_threshold=.1):
+    def __init__(self, problem, error_threshold=.01):
         self.problem = problem
         self.error_threshold = error_threshold
 
@@ -134,7 +134,7 @@ class Solver:
             if self._converged():
                 break
 
-        return self._find_stronger_solution()
+        return self._find_strongest_solution()
 
     def _analyze_theses_graph(self):
         # collect all supporting theses
@@ -235,22 +235,25 @@ class Solver:
 
             self.all_users_strength += user_data.strength
 
+        logger.debug('users strength: %s', self.all_users_strength)
+
     def _calc_relations_strength(self):
         for relation, relation_data in self.relations.items():
             relation_data.strength = self._direct_votes_strength(relation)
 
+            logger.debug('relation strength: relation=%s, strength=%s',
+                         relation, relation_data.strength)
+
     def _direct_votes_strength(self, voted_object):
-        upvotes = 0
-        downvotes = 0
+        votes = 0
 
         for user, vote in voted_object.votes.items():
-            if vote == -1:
-                downvotes += user.strength
-            else:
-                upvotes += user.strength
+            strength = self.users[user].strength
 
-        if upvotes > downvotes:
-            return upvotes / self.all_users_strength
+            votes += strength
+
+        if votes > 0:
+            return votes / self.all_users_strength
         else:
             return 0
 
@@ -268,9 +271,14 @@ class Solver:
                     thesis_data.strength += relation_data.strength * \
                         supporting_thesis_data.strength
 
+            logger.debug('thesis strength: thesis=%s, strength=%s',
+                         thesis, thesis_data.strength)
+
         self.max_theses_strength = max(
-            [thesis.strength for thesis in self.theses]
+            [thesis_data.strength for thesis_data in self.theses_data.values()]
         )
+
+        logger.debug('max theses strength: %s', self.max_theses_strength)
 
     def _new_contradiction(self, contradiction_relation, path1, path2):
         r = Contradiction(contradiction_relation, path1, path2)
@@ -322,7 +330,7 @@ class Solver:
                         Path(supp_rel)
                         for supp_rel in filter(
                             lambda r: r.type is Relation.SUPPORT and r.thesis2 is ending_point,
-                            ending_point.relations
+                            self.problem.relations
                         )
                     ]
 
@@ -363,7 +371,7 @@ class Solver:
 
     def _calc_contradictions_strength(self):
         for contradiction in self.contradictions:
-            contradiction_relation = contradiction.relation
+            contradiction_relation = contradiction.contradiction_relation
             thesis1_strength = self._normalized_thesis_strength(
                 contradiction_relation.thesis1
             )
@@ -371,7 +379,7 @@ class Solver:
                 contradiction_relation.thesis2
             )
 
-            strength = self.relation[contradiction_relation].strength * \
+            strength = self.relations[contradiction_relation].strength * \
                 thesis1_strength * thesis2_strength
 
             for path in [contradiction.path1, contradiction.path2]:
@@ -392,10 +400,13 @@ class Solver:
         for user, user_data in self.users.items():
             strength = 1
 
-            for relation, contradictions in user_data.contradictions:
+            for relation, contradictions in user_data.contradictions.items():
                 strength *= max(map(lambda x: x.strength, contradictions))
 
             user_data.next_strength = strength
+
+            logger.debug('strength: user=%s, strength=%s',
+                         user, user_data.next_strength)
 
     def _converged(self):
         for user_data in self.users.values():
@@ -403,3 +414,12 @@ class Solver:
 
             if error > self.error_threshold:
                 return False
+
+        return True
+
+    def _find_strongest_solution(self):
+        return max(
+            filter(lambda kv: kv[0].is_solution, self.theses_data.items()),
+            key=lambda kv: kv[1].strength,
+            default=(None, None)
+            )[0]
